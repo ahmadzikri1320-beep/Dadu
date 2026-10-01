@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dadu Berputar</title>
+<style>
+body{margin:0;min-height:100vh;background:#e6f3ff;font-family:Arial,sans-serif;display:flex;justify-content:center;align-items:center;padding:16px}
+.card{width:100%;max-width:380px;background:#fff;border:3px solid #1d2b53;border-radius:24px;padding:24px;text-align:center}
+.pg{height:230px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:16px}
+.lp.on{animation:putar 1.6s ease-in-out}
+.lp.on svg{animation:balik .35s linear infinite}
+@keyframes putar{0%{transform:translateY(0) rotate(0)}50%{transform:translateY(-90px) rotate(540deg)}100%{transform:translateY(0) rotate(1080deg)}}
+@keyframes balik{0%,100%{transform:scale(1,1)}50%{transform:scale(.55,1)}}
+#hs{font-size:24px;font-weight:bold;margin:12px 0;min-height:34px}
+button{width:100%;font-size:20px;font-weight:bold;padding:14px;color:#fff;background:#1fb5a3;border:3px solid #1d2b53;border-radius:16px}
+#sd{background:#fff;color:#1d2b53;font-size:16px;padding:10px;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Dadu Berputar</h1>
+  <div class="pg">
+    <div class="lp" id="lp">
+      <svg id="sv" width="140" height="140" viewBox="0 0 140 140">
+        <rect x="3" y="3" width="134" height="134" rx="22" fill="#fff" stroke="#000" stroke-width="4"/>
+        <circle cx="35" cy="35" r="13" fill="#000"/>
+        <circle cx="70" cy="35" r="13" fill="#000" opacity="0"/>
+        <circle cx="105" cy="35" r="13" fill="#000"/>
+        <circle cx="35" cy="70" r="13" fill="#000"/>
+        <circle cx="70" cy="70" r="13" fill="#000" opacity="0"/>
+        <circle cx="105" cy="70" r="13" fill="#000"/>
+        <circle cx="35" cy="105" r="13" fill="#000"/>
+        <circle cx="70" cy="105" r="13" fill="#000" opacity="0"/>
+        <circle cx="105" cy="105" r="13" fill="#000"/>
+      </svg>
+    </div>
+  </div>
+  <p id="hs">Ketuk tombol</p>
+  <button id="bt">LEMPAR DADU</button>
+  <button id="sd">Suara: nyala</button>
+</div>
+<script>
+var POLA={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
+var sv=document.getElementById("sv"),lp=document.getElementById("lp"),hs=document.getElementById("hs"),bt=document.getElementById("bt"),sd=document.getElementById("sd");
+var titik=sv.querySelectorAll("circle"),sibuk=false,suara=true,ac=null;
+
+function audio(){
+  if(!ac){var AC=window.AudioContext||window.webkitAudioContext;if(AC)ac=new AC();}
+  if(ac&&ac.state==="suspended")ac.resume();
+  return ac;
+}
+function nada(f,dur,tipe,vol,tunda){
+  var a=audio();if(!a||!suara)return;
+  var o=a.createOscillator(),g=a.createGain(),t=a.currentTime+(tunda||0);
+  o.type=tipe;o.frequency.value=f;
+  g.gain.setValueAtTime(vol,t);
+  g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  o.connect(g);g.connect(a.destination);
+  o.start(t);o.stop(t+dur);
+}
+function bunyiKocok(){nada(300+Math.random()*500,0.05,"square",0.08);}
+function bunyiHasil(){nada(660,0.25,"sine",0.25,0);nada(880,0.35,"sine",0.25,0.12);nada(1320,0.5,"sine",0.2,0.26);}
+
+function tampil(n){for(var i=0;i<9;i++){titik[i].setAttribute("opacity",POLA[n].indexOf(i+1)>-1?"1":"0")}}
+function acak(){return Math.floor(Math.random()*6)+1}
+
+function lempar(){
+  if(sibuk)return;
+  sibuk=true;bt.disabled=true;hs.textContent="Berputar...";
+  lp.classList.remove("on");void lp.offsetWidth;lp.classList.add("on");
+  var h=0,t=setInterval(function(){
+    tampil(acak());bunyiKocok();h++;
+    if(h>=16){
+      clearInterval(t);
+      var a=acak();tampil(a);
+      lp.classList.remove("on");
+      hs.textContent="Hasilnya: "+a;
+      bunyiHasil();
+      sibuk=false;bt.disabled=false;
+    }
+  },95);
+}
+sd.onclick=function(){
+  suara=!suara;
+  sd.textContent=suara?"Suara: nyala":"Suara: mati";
+};
+bt.onclick=lempar;sv.onclick=lempar;
+</script>
+</body>
+</html>
